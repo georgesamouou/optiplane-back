@@ -39,11 +39,11 @@ const navigation = () => {
           title: 'Projets non valide',
           path: '/projet/non-valide'
         }
-        ,
+        ,/*
         {
           title: 'Settings',
           path: '/settings'
-        }
+        }*/
       ]
     },
     {
@@ -51,13 +51,14 @@ const navigation = () => {
       icon: 'mdi:email-outline',
       path: '/apps/email'
     },
-
+    
+/*
     {
       title: 'Gouvernance',
       icon: 'mdi:calendar-blank-outline',
       path: '/gouvernace'
-    },
-    
+    },*/
+
 /*
     {
       title: 'User',
