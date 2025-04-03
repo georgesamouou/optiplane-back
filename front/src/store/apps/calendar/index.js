@@ -14,7 +14,7 @@ export const fetchEvents = createAsyncThunk('appCalendar/fetchEvents', async (ca
     throw new Error('Authorization token is missing');
   }
 
-  const response = await fetch(`http://localhost:5001/calendar`, {
+  const response = await fetch(`https://optiplane-back-1.onrender.com/calendar`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
@@ -39,7 +39,7 @@ export const addEvent = createAsyncThunk('appCalendar/addEvent', async (event, {
     throw new Error('Authorization token is missing');
   }
 
-  const response = await fetch('http://localhost:5001/project', {
+  const response = await fetch('https://optiplane-back-1.onrender.com/project', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -63,7 +63,7 @@ export const addEvent = createAsyncThunk('appCalendar/addEvent', async (event, {
 export const updateEvent = createAsyncThunk('appCalendar/updateEvent', async (event, { dispatch }) => {
   console.log("event-------",event);
 
-  const response = await fetch('http://localhost:5001/project/update', {
+  const response = await fetch('https://optiplane-back-1.onrender.com/project/update', {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json'
@@ -91,7 +91,7 @@ export const deleteEvent = createAsyncThunk('appCalendar/deleteEvent', async (id
     throw new Error('Authorization token is missing');
   }
 
-  const response = await fetch(`http://localhost:5001/project/del/${id}`, {
+  const response = await fetch(`https://optiplane-back-1.onrender.com/project/del/${id}`, {
     method: 'DELETE',
     headers: {
       'Content-Type': 'application/json',

@@ -19,7 +19,7 @@ const ProjetTable = () => {
 
 
     if (token && user?.id) {
-      fetch(`http://localhost:5001/projectss/${user.id}`, {
+      fetch(`https://optiplane-back-1.onrender.com/projectss/${user.id}`, {
         method: 'GET',
         headers: {
           Authorization: token,
@@ -93,7 +93,7 @@ const ProjetTable = () => {
   // Handle updating the project
   const handleUpdateProject = async () => {
     try {
-      const response = await fetch('http://localhost:5001/project/update', {
+      const response = await fetch('https://optiplane-back-1.onrender.com/project/update', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -274,7 +274,7 @@ const ProjetTable = () => {
                 color="primary"
                 onClick={handleUpdateProject}
                 sx={{ mr: 2 }}
-                
+
               >
                 Save
               </Button>

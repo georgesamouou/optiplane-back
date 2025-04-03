@@ -33,6 +33,8 @@ const UserDropdown = props => {
   // ** Props
   const { settings } = props
 
+  const {user} = useContext(AuthContext)
+
   // ** States
   const [anchorEl, setAnchorEl] = useState(null)
 
@@ -114,9 +116,9 @@ const UserDropdown = props => {
               <Avatar alt='John Doe' src='/images/avatars/1.png' sx={{ width: '2.5rem', height: '2.5rem' }} />
             </Badge>
             <Box sx={{ display: 'flex', ml: 3, alignItems: 'flex-start', flexDirection: 'column' }}>
-              <Typography sx={{ fontWeight: 600 }}>John Doe</Typography>
+              <Typography sx={{ fontWeight: 600 }}>{user && user.username}</Typography>
               <Typography variant='body2' sx={{ fontSize: '0.8rem', color: 'text.disabled' }}>
-                Admin
+                {user && user.role}
               </Typography>
             </Box>
           </Box>

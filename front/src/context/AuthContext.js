@@ -44,7 +44,7 @@ const AuthProvider = ({ children }) => {
       const storedToken = window.localStorage.getItem(authConfig.storageTokenKeyName)
       setLoading(true)
       if (storedToken) {
-        fetch(`http://localhost:5001/auth-me`, {
+        fetch(`https://optiplane-back-1.onrender.com/auth-me`, {
               method: 'GET',
               headers: {
                 Authorization: storedToken,
@@ -82,7 +82,7 @@ const AuthProvider = ({ children }) => {
   }, [])
 
   const handleLogin = async(params, errorCallback) => {
-    fetch(`http://localhost:5001/login`, {
+    fetch(`https://optiplane-back-1.onrender.com/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
