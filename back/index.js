@@ -109,134 +109,91 @@ app.get('/auth-me', async (req, res) => {
   }
 });
 
-app.get("/calendar", authMiddleware(['PMO_DIRECTION']), async (req, res) => {
+app.get('/calendar', authMiddleware(['PMO_DIRECTION', 'EQUIPE_TTM', 'CHEF_DE_PROJET']), async (req, res) => {
   try {
-    const projects = await prisma.project.findMany({
-      where: { direction: req.user.direction },
-      include: {
-        createdBy: { select: { id: true, username: true } },
-        session: true
-      }
-    });
+    let projects;
 
-    const formattedProjects = projects.map(project => ({
+    // Handle logic based on user role
+    if (req.user.role === 'PMO_DIRECTION') {
+      projects = await prisma.project.findMany({
+        where: { direction: req.user.direction },
+        include: {
+          createdBy: { select: { id: true, username: true } },
+          session: true,
+        },
+      });
+    } else if (req.user.role === 'EQUIPE_TTM') {
+      projects = await prisma.project.findMany({
+        include: {
+          createdBy: { select: { id: true, username: true } },
+          session: true,
+        },
+      });
+    } else if (req.user.role === 'CHEF_DE_PROJET') {
+      projects = await prisma.project.findMany({
+        where: { createdById: req.user.id },
+        include: {
+          createdBy: { select: { id: true, username: true } },
+          session: true,
+        },
+      });
+    } else {
+      return res.status(403).json({ error: 'Unauthorized role' });
+    }
+
+    // Format projects
+    const formattedProjects = projects.map((project) => ({
       id: project.id,
-      url:"",
+      url: '',
       title: project.title,
       start: project.startDate,
       end: project.endDate,
       allDay: true,
-      extendedProps: {
-        ...project
-      },
+      extendedProps: { ...project },
     }));
 
     res.json(formattedProjects);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch projects' });
-  }
-});
-app.get("/calendar", authMiddleware(['EQUIPE_TTM']), async (req, res) => {
-  try {
-    const projects = await prisma.project.findMany({
-      include: {
-        createdBy: { select: { id: true, username: true } },
-        session: true
-      }
-    });
-
-    const formattedProjects = projects.map(project => ({
-      id: project.id,
-      url:"",
-      title: project.title,
-      start: project.startDate,
-      end: project.endDate,
-      allDay: true,
-      extendedProps: {
-        ...project
-      },
-    }));
-
-    res.json(formattedProjects);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch projects' });
-  }
-});
-app.get("/calendar", authMiddleware(['CHEF_DE_PROJET']), async (req, res) => {
-  try {
-    const userId = req.user.id;
-    const projects = await prisma.project.findMany({
-      where: { createdById: userId }, // Filter projects by the current user's ID
-      include: {
-        createdBy: { select: { id: true, username: true } },
-        session: true
-      }
-    });
-    console.log("projects", projects);  
-    const formattedProjects = projects.map(project => ({
-      id: project.id,
-      url:"",
-      title: project.title,
-      start: project.startDate,
-      end: project.endDate,
-      allDay: true,
-      extendedProps: {
-        ...project
-      },
-    }));
-
-    res.json(formattedProjects);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch projects' });
-  }
-});
-app.get("/projectss/:userId", authMiddleware(['PMO_DIRECTION']), async (req, res) => {
-  try {
-    const projects = await prisma.project.findMany({
-      where: { direction: req.user.direction },
-      include: {
-        createdBy: { select: { id: true, username: true } },
-        session: true
-      }
-    });
-    res.json(projects);
-  } catch (error) {
+    console.error(error);
     res.status(500).json({ error: 'Failed to fetch projects' });
   }
 });
 
-app.get("/projectss/:userId", authMiddleware(['CHEF_DE_PROJET']), async (req, res) => {
+app.get('/projects', authMiddleware(['PMO_DIRECTION', 'EQUIPE_TTM', 'CHEF_DE_PROJET']), async (req, res) => {
   try {
-    // Assuming `req.user` contains the authenticated user's data
-    console.log("User", req.params.userId);
-    const userId = req.user.id;
-    const projects = await prisma.project.findMany({
-      where: { createdById: userId }, // Filter projects by the current user's ID
-      include: {
-        createdBy: { select: { id: true, username: true } },
-        session: true
-      }
-    });
-    console.log("projects", projects);
+    let projects;
+
+    // Handle logic based on user role
+    if (req.user.role === 'PMO_DIRECTION') {
+      projects = await prisma.project.findMany({
+        where: { direction: req.user.direction },
+        include: {
+          createdBy: { select: { id: true, username: true } },
+          session: true,
+        },
+      });
+    } else if (req.user.role === 'EQUIPE_TTM') {
+      projects = await prisma.project.findMany({
+        include: {
+          createdBy: { select: { id: true, username: true } },
+          session: true,
+        },
+      });
+    } else if (req.user.role === 'CHEF_DE_PROJET') {
+      projects = await prisma.project.findMany({
+        where: { createdById: req.user.id },
+        include: {
+          createdBy: { select: { id: true, username: true } },
+          session: true,
+        },
+      });
+    } else {
+      return res.status(403).json({ error: 'Unauthorized role' });
+    }
 
     res.json(projects);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch projects' });
-  }
-});
-
-app.get("/projectss/:userId", authMiddleware(['EQUIPE_TTM']), async (req, res) => {
-  try {
-    const projects = await prisma.project.findMany({
-      include: {
-        createdBy: { select: { id: true, username: true } },
-        session: true
-      }
-    });
-    console.log("projects", projects);
-
-    res.json(projects);
-  } catch (error) {
+    console.error(error);
     res.status(500).json({ error: 'Failed to fetch projects' });
   }
 });
@@ -281,123 +238,93 @@ app.post('/project', authMiddleware(['CHEF_DE_PROJET']), async (req, res) => {
   });
   res.json(project);
 }); 
-app.get('/project/valide', authMiddleware(['CHEF_DE_PROJET']), async (req, res) => {
+
+app.get('/project/valide', authMiddleware(['CHEF_DE_PROJET', 'EQUIPE_TTM', 'PMO_DIRECTION']), async (req, res) => {
   try {
-    const projects = await prisma.project.findMany({
-      where: { state: 'SCHEDULED',createdById: req.user.id }, 
-      include: {
-        createdBy: { select: { id: true, username: true } },
-        session: true
-      }
-    });
-    res.json(projects);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Failed to fetch valid projects' });
-  }
-});
-app.get('/project/invalide', authMiddleware(['CHEF_DE_PROJET']), async (req, res) => {
-  try {
-    const projects = await prisma.project.findMany({
-      where: { 
-        createdById: req.user.id,
-        state: {
-          not:'SCHEDULED' 
-        }},
+    let projects;
+
+    // Handle logic based on user role
+    if (req.user.role === 'CHEF_DE_PROJET') {
+      projects = await prisma.project.findMany({
+        where: { state: 'SCHEDULED', createdById: req.user.id },
         include: {
           createdBy: { select: { id: true, username: true } },
-          session: true
-        }
-    });
-    res.json(projects);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Failed to fetch valid projects' });
-  }
-});
-
-app.get('/project/valide', authMiddleware(['EQUIPE_TTM']), async (req, res) => {
-  try {
-    const projects = await prisma.project.findMany({
-      where: { state: 'SCHEDULED'}, 
-      include: {
-        createdBy: { select: { id: true, username: true } },
-        session: true
-      }
-    });
-    res.json(projects);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Failed to fetch valid projects' });
-  }
-});
-app.get('/project/invalide', authMiddleware(['EQUIPE_TTM']), async (req, res) => {
-  try {
-    const projects = await prisma.project.findMany({
-      where: { 
-        state: {
-          not:'SCHEDULED' 
-        }},
+          session: true,
+        },
+      });
+    } else if (req.user.role === 'EQUIPE_TTM') {
+      projects = await prisma.project.findMany({
+        where: { state: 'SCHEDULED' },
         include: {
           createdBy: { select: { id: true, username: true } },
-          session: true
-        }
-    });
-    res.json(projects);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Failed to fetch valid projects' });
-  }
-});
-
-app.get('/project/valide', authMiddleware(['PMO_DIRECTION']), async (req, res) => {
-  try {
-    const projects = await prisma.project.findMany({
-      where: { state: 'SCHEDULED',direction: req.user.direction }, 
-      include: {
-        createdBy: { select: { id: true, username: true } },
-        session: true
-      }
-    });
-    res.json(projects);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Failed to fetch valid projects' });
-  }
-});
-app.get('/project/invalide', authMiddleware(['PMO_DIRECTION']), async (req, res) => {
-  try {
-    const projects = await prisma.project.findMany({
-      where: { 
-        direction: req.user.direction,
-        state: {
-          not:'SCHEDULED' 
-        }},
+          session: true,
+        },
+      });
+    } else if (req.user.role === 'PMO_DIRECTION') {
+      projects = await prisma.project.findMany({
+        where: { state: 'SCHEDULED', direction: req.user.direction },
         include: {
           createdBy: { select: { id: true, username: true } },
-          session: true
-        }
-    });
+          session: true,
+        },
+      });
+    } else {
+      return res.status(403).json({ error: 'Unauthorized role' });
+    }
+
     res.json(projects);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Failed to fetch valid projects' });
   }
 });
+app.get('/project/invalide', authMiddleware(['CHEF_DE_PROJET', 'EQUIPE_TTM', 'PMO_DIRECTION']), async (req, res) => {
+  try {
+    let projects;
 
+    // Handle logic based on user role
+    if (req.user.role === 'CHEF_DE_PROJET') {
+      projects = await prisma.project.findMany({
+        where: {
+          createdById: req.user.id,
+          state: { not: 'SCHEDULED' },
+        },
+        include: {
+          createdBy: { select: { id: true, username: true } },
+          session: true,
+        },
+      });
+    } else if (req.user.role === 'EQUIPE_TTM') {
+      projects = await prisma.project.findMany({
+        where: {
+          state: { not: 'SCHEDULED' },
+        },
+        include: {
+          createdBy: { select: { id: true, username: true } },
+          session: true,
+        },
+      });
+    } else if (req.user.role === 'PMO_DIRECTION') {
+      projects = await prisma.project.findMany({
+        where: {
+          direction: req.user.direction,
+          state: { not: 'SCHEDULED' },
+        },
+        include: {
+          createdBy: { select: { id: true, username: true } },
+          session: true,
+        },
+      });
+    } else {
+      return res.status(403).json({ error: 'Unauthorized role' });
+    }
 
-
-
-
-
-
-
-
-
-
-
-
-
+    res.json(projects);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to fetch invalid projects' });
+  }
+});
 
 
 
@@ -432,16 +359,14 @@ app.post('/sessions', authMiddleware(['EQUIPE_TTM']), async (req, res) => {
   });
   res.json(session);
 });
-
-app.delete('/project/del/:id', authMiddleware(['CHEF_DE_PROJET']), async (req, res) => {
+app.delete('/project/:id', authMiddleware(['CHEF_DE_PROJET', 'EQUIPE_TTM', 'PMO_DIRECTION']), async (req, res) => {
   try {
-    const projectId = parseInt(req.params.id); // Get the project ID from the route parameter
+    const projectId = parseInt(req.params.id);
 
     if (!projectId) {
       return res.status(400).json({ error: 'Project ID is required' });
     }
 
-    // Check if the project exists and belongs to the current user
     const project = await prisma.project.findUnique({
       where: { id: projectId },
     });
@@ -450,70 +375,15 @@ app.delete('/project/del/:id', authMiddleware(['CHEF_DE_PROJET']), async (req, r
       return res.status(404).json({ error: 'Project not found' });
     }
 
-    if(project.state !== 'INITIATION'){
+    // Role-based deletion logic
+    if (req.user.role === 'CHEF_DE_PROJET' && project.state !== 'INITIATION') {
       return res.status(400).json({ error: 'Project cannot be deleted in this state' });
     }
-    // Delete the project
-    await prisma.project.delete({
-      where: { id: projectId },
-    });
 
-    res.status(200).json({ message: 'Project deleted successfully' });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Failed to delete project' });
-  }
-});
-app.delete('/project/del/:id', authMiddleware(['EQUIPE_TTM']), async (req, res) => {
-  try {
-    const projectId = parseInt(req.params.id); // Get the project ID from the route parameter
-
-    if (!projectId) {
-      return res.status(400).json({ error: 'Project ID is required' });
-    }
-
-    // Check if the project exists and belongs to the current user
-    const project = await prisma.project.findUnique({
-      where: { id: projectId },
-    });
-
-    if (!project) {
-      return res.status(404).json({ error: 'Project not found' });
-    }
-
-    // Delete the project
-    await prisma.project.delete({
-      where: { id: projectId },
-    });
-
-    res.status(200).json({ message: 'Project deleted successfully' });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Failed to delete project' });
-  }
-});
-
-app.delete('/project/del/:id', authMiddleware(['PMO_DIRECTION']), async (req, res) => {
-  try {
-    const projectId = parseInt(req.params.id); // Get the project ID from the route parameter
-
-    if (!projectId) {
-      return res.status(400).json({ error: 'Project ID is required' });
-    }
-
-    // Check if the project exists and belongs to the current user
-    const project = await prisma.project.findUnique({
-      where: { id: projectId },
-    });
-
-    if (!project) {
-      return res.status(404).json({ error: 'Project not found' });
-    }
-
-    if(project.state === 'TTM_VALIDATION' || project.state === 'SCHEDULED'){
+    if (req.user.role === 'PMO_DIRECTION' && ['TTM_VALIDATION', 'SCHEDULED'].includes(project.state)) {
       return res.status(400).json({ error: 'Project cannot be deleted in this state' });
     }
-    // Delete the project
+
     await prisma.project.delete({
       where: { id: projectId },
     });
@@ -524,4 +394,5 @@ app.delete('/project/del/:id', authMiddleware(['PMO_DIRECTION']), async (req, re
     res.status(500).json({ error: 'Failed to delete project' });
   }
 });
+
 app.listen(5001, () => console.log('Server running on port 5001'));
