@@ -225,6 +225,22 @@ app.get("/projectss/:userId", authMiddleware(['CHEF_DE_PROJET']), async (req, re
   }
 });
 
+app.get("/projectss/:userId", authMiddleware(['EQUIPE_TTM']), async (req, res) => {
+  try {
+    const projects = await prisma.project.findMany({
+      include: {
+        createdBy: { select: { id: true, username: true } },
+        session: true
+      }
+    });
+    console.log("projects", projects);
+
+    res.json(projects);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch projects' });
+  }
+});
+
 app.put("/project/update", async (req, res) => {
   try {
     const { id, data } = req.body;
@@ -299,6 +315,94 @@ app.get('/project/invalide', authMiddleware(['CHEF_DE_PROJET']), async (req, res
     res.status(500).json({ error: 'Failed to fetch valid projects' });
   }
 });
+
+app.get('/project/valide', authMiddleware(['EQUIPE_TTM']), async (req, res) => {
+  try {
+    const projects = await prisma.project.findMany({
+      where: { state: 'SCHEDULED'}, 
+      include: {
+        createdBy: { select: { id: true, username: true } },
+        session: true
+      }
+    });
+    res.json(projects);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to fetch valid projects' });
+  }
+});
+app.get('/project/invalide', authMiddleware(['EQUIPE_TTM']), async (req, res) => {
+  try {
+    const projects = await prisma.project.findMany({
+      where: { 
+        state: {
+          not:'SCHEDULED' 
+        }},
+        include: {
+          createdBy: { select: { id: true, username: true } },
+          session: true
+        }
+    });
+    res.json(projects);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to fetch valid projects' });
+  }
+});
+
+app.get('/project/valide', authMiddleware(['PMO_DIRECTION']), async (req, res) => {
+  try {
+    const projects = await prisma.project.findMany({
+      where: { state: 'SCHEDULED',direction: req.user.direction }, 
+      include: {
+        createdBy: { select: { id: true, username: true } },
+        session: true
+      }
+    });
+    res.json(projects);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to fetch valid projects' });
+  }
+});
+app.get('/project/invalide', authMiddleware(['PMO_DIRECTION']), async (req, res) => {
+  try {
+    const projects = await prisma.project.findMany({
+      where: { 
+        direction: req.user.direction,
+        state: {
+          not:'SCHEDULED' 
+        }},
+        include: {
+          createdBy: { select: { id: true, username: true } },
+          session: true
+        }
+    });
+    res.json(projects);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to fetch valid projects' });
+  }
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // Update Project State (PMO Direction)
 app.put('/projects/:id/state', authMiddleware(['PMO_DIRECTION']), async (req, res) => {
   const project = await prisma.project.update({
