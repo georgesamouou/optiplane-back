@@ -4,6 +4,7 @@ import authConfig from 'src/configs/auth';
 
 // ** Axios Imports
 import axios from 'axios'
+import API_URL from 'src/configs/api';
 
 // ** Fetch Events
 export const fetchEvents = createAsyncThunk('appCalendar/fetchEvents', async (calendars, { getState }) => {
@@ -14,7 +15,7 @@ export const fetchEvents = createAsyncThunk('appCalendar/fetchEvents', async (ca
     throw new Error('Authorization token is missing');
   }
 
-  const response = await fetch(`https://optiplane-back-1.onrender.com/calendar`, {
+  const response = await fetch(`${API_URL}/calendar`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
@@ -39,7 +40,9 @@ export const addEvent = createAsyncThunk('appCalendar/addEvent', async (event, {
     throw new Error('Authorization token is missing');
   }
 
-  const response = await fetch('https://optiplane-back-1.onrender.com/project', {
+  console.log("response-------",event);
+
+  const response = await fetch(`${API}/project`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -50,7 +53,7 @@ export const addEvent = createAsyncThunk('appCalendar/addEvent', async (event, {
   if (!response.ok) {
     throw new Error(`Failed to add event: ${response.statusText}`);
   }
-
+  console.log("response-------",response);
   const data = await response.json();
 
   // Fetch updated events after adding the new event
@@ -63,7 +66,7 @@ export const addEvent = createAsyncThunk('appCalendar/addEvent', async (event, {
 export const updateEvent = createAsyncThunk('appCalendar/updateEvent', async (event, { dispatch }) => {
   console.log("event-------",event);
 
-  const response = await fetch('https://optiplane-back-1.onrender.com/project/update', {
+  const response = await fetch(`${API_URL}/project/update`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json'
@@ -91,7 +94,7 @@ export const deleteEvent = createAsyncThunk('appCalendar/deleteEvent', async (id
     throw new Error('Authorization token is missing');
   }
 
-  const response = await fetch(`https://optiplane-back-1.onrender.com/project/del/${id}`, {
+  const response = await fetch(`${API_URL}/project/${id}`, {
     method: 'DELETE',
     headers: {
       'Content-Type': 'application/json',

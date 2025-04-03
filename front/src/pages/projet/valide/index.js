@@ -2,6 +2,7 @@ import React, { useEffect, useContext, useState } from 'react';
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, Drawer, TextField, MenuItem, Select, InputLabel, FormControl, Box, Chip } from '@mui/material';
 import { AuthContext } from 'src/context/AuthContext';
 import authConfig from 'src/configs/auth';
+import API_URL from 'src/configs/api';
 
 const ProjetTable = () => {
   const [projects, setProjects] = useState([]);
@@ -19,7 +20,7 @@ const ProjetTable = () => {
 
 
     if (token && user?.id) {
-      fetch(`https://optiplane-back-1.onrender.com/valide`, {
+      fetch(`${API_URL}/project/valide`, {
         method: 'GET',
         headers: {
           Authorization: token,
@@ -93,7 +94,7 @@ const ProjetTable = () => {
   // Handle updating the project
   const handleUpdateProject = async () => {
     try {
-      const response = await fetch('https://optiplane-back-1.onrender.com/project/update', {
+      const response = await fetch(`${API_URL}/project/update`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

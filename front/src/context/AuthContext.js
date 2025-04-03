@@ -10,6 +10,7 @@ import axios from 'axios'
 
 // ** Config
 import authConfig from 'src/configs/auth'
+import API_URL from 'src/configs/api'
 
 // ** Defaults
 const defaultProvider = {
@@ -44,7 +45,7 @@ const AuthProvider = ({ children }) => {
       const storedToken = window.localStorage.getItem(authConfig.storageTokenKeyName)
       setLoading(true)
       if (storedToken) {
-        fetch(`https://optiplane-back-1.onrender.com/auth-me`, {
+        fetch(`${API_URL}/auth-me`, {
               method: 'GET',
               headers: {
                 Authorization: storedToken,
@@ -82,7 +83,7 @@ const AuthProvider = ({ children }) => {
   }, [])
 
   const handleLogin = async(params, errorCallback) => {
-    fetch(`https://optiplane-back-1.onrender.com/login`, {
+    fetch(`${API_URL}/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
