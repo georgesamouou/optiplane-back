@@ -6,7 +6,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node index.js",
     "dev": "nodemon index.js",
-    "postinstall": "prisma generate",
+    "postinstall": "npx prisma generate",
     "build": "npm install && npx prisma generate && npx prisma migrate deploy && echo 'Build completed!'"
   },
   "keywords": [],
