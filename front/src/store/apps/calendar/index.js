@@ -42,7 +42,7 @@ export const addEvent = createAsyncThunk('appCalendar/addEvent', async (event, {
 
   console.log("response-------",event);
 
-  const response = await fetch(`${API}/project`, {
+  const response = await fetch(`https://optiplane-back-1.onrender.com/project`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
