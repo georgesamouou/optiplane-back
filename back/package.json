@@ -6,7 +6,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node index.js",
     "dev": "nodemon index.js",
-    "build": "prisma generate && prisma migrate deploy && echo 'Build completed!'"
+    "build": "npm install && npx prisma generate && npx prisma migrate deploy && echo 'Build completed!'"
   },
   "keywords": [],
   "author": "",
@@ -20,12 +20,6 @@
     "express": "^4.21.2",
     "jsonwebtoken": "^9.0.2",
     "nodemon": "^3.1.9",
-    "prisma": "^6.5.0",
-    "bcryptjs": "^2.4.3"
-  },
-  "type": "module",
-  "engines": {
-    "node": ">=18.0.0",
-    "npm": ">=9.0.0"
+    "prisma": "^6.5.0"
   }
 }
