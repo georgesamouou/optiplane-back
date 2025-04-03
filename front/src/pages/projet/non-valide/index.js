@@ -43,7 +43,7 @@ const ProjetTable = () => {
           console.error('Error fetching projects:', error);
         });
     }
-  }, []);
+  }, [projects]);
 
   // Dynamically set state options based on user role
   const stateOptions = (() => {
