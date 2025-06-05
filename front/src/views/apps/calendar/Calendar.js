@@ -100,12 +100,16 @@ const Calendar = props => {
       navLinks: true,
       eventClassNames({ event: calendarEvent }) {
         // @ts-ignore
-        const colorName = calendarsColor[calendarEvent._def.extendedProps.calendar]
-
-        return [
-          // Background Color
-          `bg-${colorName}`
-        ]
+        const calendarType = calendarEvent._def.extendedProps.calendar? calendarEvent._def.extendedProps.calendar : calendarEvent._def.extendedProps.type;
+        console.log('calendarType', calendarType)  
+        // Assign a specific class based on the calendar type
+        if (calendarType === 'COMOP') {
+          return ['bg-primary', 'text-white']; // Example: Blue background with white text
+        } else if (calendarType === 'CI') {
+          return ['bg-success', 'text-white']; // Example: Green background with white text
+        } else {
+          return ['bg-secondary', 'text-white']; // Default style
+        }
       },
       eventClick({ event: clickedEvent }) {
         if (user.role === 'CHEF_DE_PROJET' && clickedEvent._def.extendedProps.state != 'INITIATION') {
@@ -120,6 +124,10 @@ const Calendar = props => {
         // ! Always grab all fields rendered by form (even if it get `undefined`) otherwise due to Vue3/Composition API you might get: "object is not extensible"
         // event.value = grabEventDataFromEventApi(clickedEvent)
         // isAddNewEventSidebarActive.value = true
+      },
+      eventContent({ event }) {
+        // Use only the title without any prefix
+        return { html: `<div>${event.title}</div>` };
       },
       customButtons: {
         sidebarToggle: {
@@ -185,8 +193,25 @@ const Calendar = props => {
               ? Docs: https://fullcalendar.io/docs/eventDrop
               ? We can use `eventDragStop` but it doesn't return updated event so we have to use `eventDrop` which returns updated event
             */
-      eventDrop({ event: droppedEvent }) {
-        dispatch(updateEvent(droppedEvent))
+      eventDrop({ event: droppedEvent, revert }) {
+        if (user.role === 'CHEF_DE_PROJET' && droppedEvent._def.extendedProps.state != 'INITIATION') {
+          // Show a toast message
+          toast.success('Votre projet est en cours de validation vous ne pouvez modifier.');
+
+          // Revert the event to its original position
+          revert();
+
+          return;
+        }
+
+        const updatedEvent = {
+          ...droppedEvent.extendedProps,
+          startDate: new Date(droppedEvent._instance.range.start),
+          endDate: new Date(droppedEvent._instance.range.end)
+        };
+
+        // Dispatch the updated event
+        dispatch(updateEvent(updatedEvent));
       },
 
       /*
@@ -194,7 +219,20 @@ const Calendar = props => {
               ? Docs: https://fullcalendar.io/docs/eventResize
             */
       eventResize({ event: resizedEvent }) {
-        dispatch(updateEvent(resizedEvent))
+        // Create an updated event object with properly formatted dates
+        if (user.role === 'CHEF_DE_PROJET' && resizedEvent._def.extendedProps.state != 'INITIATION') {
+          toast.success('Votre projet est en cours de validation vous ne pouvez modifier.');
+
+          return;
+        }
+        const updatedEvent = {
+          ...resizedEvent.extendedProps,
+          startDate: resizedEvent.start.toISOString(),
+          endDate: resizedEvent.end ? resizedEvent.end.toISOString() : resizedEvent.start.toISOString()
+        };
+
+        // Dispatch the updated event
+        dispatch(updateEvent(updatedEvent));
       },
       ref: calendarRef,
 

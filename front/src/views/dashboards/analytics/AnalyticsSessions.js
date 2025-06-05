@@ -80,7 +80,7 @@ const AnalyticsSessions = () => {
             +62%
           </Typography>
         </Box>
-        <Typography variant='body2'>Sessions</Typography>
+        <Typography variant='body2'>Taux de validation</Typography>
         <ReactApexcharts type='line' height={108} options={options} series={series} />
       </CardContent>
     </Card>

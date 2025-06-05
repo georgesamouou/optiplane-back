@@ -1,8 +1,10 @@
+import React, { useEffect, useState } from 'react';
+
 // ** MUI Imports
-import Card from '@mui/material/Card'
+import Card from '@mui/material/Card';
 import Button from '@mui/material/Button'
 import Divider from '@mui/material/Divider'
-import CardHeader from '@mui/material/CardHeader'
+import CardHeader from '@mui/material/CardHeader';
 import Typography from '@mui/material/Typography'
 import CardContent from '@mui/material/CardContent'
 import Grid from '@mui/material/Grid'
@@ -15,33 +17,43 @@ import Icon from 'src/@core/components/icon'
 import CustomAvatar from 'src/@core/components/mui/avatar'
 import OptionsMenu from 'src/@core/components/option-menu'
 import ReactApexcharts from 'src/@core/components/react-apexcharts'
-
+import authConfig from 'src/configs/auth';
+import API_URL from 'src/configs/api';
 // ** Util Import
 import { hexToRGBA } from 'src/@core/utils/hex-to-rgba'
 
-const series = [
-  {
-    name: 'Last Week',
-    data: [83, 153, 213, 279, 213, 153, 83]
-  },
-  {
-    name: 'This Week',
-    data: [-84, -156, -216, -282, -216, -156, -84]
-  }
-]
-
-// Styled Grid component
-const StyledGrid = styled(Grid)(({ theme }) => ({
-  [theme.breakpoints.down('sm')]: {
-    borderBottom: `1px solid ${theme.palette.divider}`
-  },
-  [theme.breakpoints.up('sm')]: {
-    borderRight: `1px solid ${theme.palette.divider}`
-  }
-}))
-
 const AnalyticsTotalTransactions = () => {
-  // ** Hook
+  const [weeklyData, setWeeklyData] = useState([]);
+
+  useEffect(() => {
+    const fetchWeeklyData = async () => {
+      try {
+        const response = await fetch(`${API_URL}/dashboard/comparison`, {
+          headers: {
+            Authorization: window.localStorage.getItem(authConfig.storageTokenKeyName), // Adjust based on your auth setup
+          },
+        });
+        const data = await response.json();
+        setWeeklyData(data);
+      } catch (error) {
+        console.error('Failed to fetch weekly comparison data:', error);
+      }
+    };
+
+    fetchWeeklyData();
+  }, []);
+
+  const series = [
+    {
+      name: 'Validated Projects',
+      data: weeklyData.map((week) => week.validatedProjects),
+    },
+    {
+      name: 'Non-Validated Projects',
+      data: weeklyData.map((week) => week.nonValidatedProjects),
+    },
+  ];
+
   const theme = useTheme()
 
   const options = {
@@ -106,8 +118,8 @@ const AnalyticsTotalTransactions = () => {
   return (
     <Card>
       <Grid container>
-        <StyledGrid item xs={12} sm={7}>
-          <CardHeader title='Total Transactions' titleTypographyProps={{ sx: { letterSpacing: '0.15px' } }} />
+        <Grid item xs={12} sm={7}>
+          <CardHeader title='Total Validations' titleTypographyProps={{ sx: { letterSpacing: '0.15px' } }} />
           <CardContent
             sx={{
               '& .apexcharts-series[rel="2"]': {
@@ -117,11 +129,11 @@ const AnalyticsTotalTransactions = () => {
           >
             <ReactApexcharts type='bar' height={278} series={series} options={options} />
           </CardContent>
-        </StyledGrid>
+        </Grid>
         <Grid item xs={12} sm={5}>
           <CardHeader
             title='Report'
-            subheader='Last month transactions $234.40k'
+            subheader='Last month projects 4'
             subheaderTypographyProps={{ sx: { lineHeight: 1.429 } }}
             titleTypographyProps={{ sx: { letterSpacing: '0.15px' } }}
             action={
@@ -175,17 +187,13 @@ const AnalyticsTotalTransactions = () => {
                 </Typography>
                 <Typography sx={{ fontWeight: 600 }}>+94.15%</Typography>
               </Grid>
-              <Grid item xs={6}>
-                <Button fullWidth variant='contained'>
-                  View Report
-                </Button>
-              </Grid>
+              
             </Grid>
           </CardContent>
         </Grid>
       </Grid>
     </Card>
-  )
-}
+  );
+};
 
-export default AnalyticsTotalTransactions
+export default AnalyticsTotalTransactions;

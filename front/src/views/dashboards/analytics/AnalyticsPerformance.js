@@ -1,3 +1,5 @@
+import React, { useEffect, useState } from 'react'
+
 // ** MUI Imports
 import Card from '@mui/material/Card'
 import { useTheme } from '@mui/material/styles'
@@ -6,22 +8,38 @@ import CardContent from '@mui/material/CardContent'
 
 // ** Custom Components Imports
 import OptionsMenu from 'src/@core/components/option-menu'
+import authConfig from 'src/configs/auth';
 import ReactApexcharts from 'src/@core/components/react-apexcharts'
-
-const series = [
-  {
-    name: 'Income',
-    data: [70, 90, 80, 95, 75, 90]
-  },
-  {
-    name: 'Net Worth',
-    data: [110, 72, 62, 65, 100, 75]
-  }
-]
+import API_URL from 'src/configs/api';
 
 const AnalyticsPerformance = () => {
+  const token = window.localStorage.getItem(authConfig.storageTokenKeyName);
+  const [series, setSeries] = useState([
+    { name: 'COMOP', data: [] },
+    { name: 'CI', data: [] }
+  ])
+
   // ** Hook
   const theme = useTheme()
+
+  useEffect(() => {
+    const fetchProjectData = async () => {
+      try {
+        const response = await fetch(`${API_URL}/projects-by-type`, {
+          headers: {
+            Authorization: token // Adjust based on your auth setup
+          }
+        })
+        const data = await response.json()
+        setSeries(data)
+        console.log('Project data by type:', data)
+      } catch (error) {
+        console.error('Failed to fetch project data by type:', error)
+      }
+    }
+
+    fetchProjectData()
+  }, [])
 
   const options = {
     chart: {
@@ -80,7 +98,7 @@ const AnalyticsPerformance = () => {
   return (
     <Card>
       <CardHeader
-        title='Performance'
+        title='Statistiques des dossiers'
         action={
           <OptionsMenu
             options={['Last 28 Days', 'Last Month', 'Last Year']}

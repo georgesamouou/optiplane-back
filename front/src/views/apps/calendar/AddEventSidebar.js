@@ -75,7 +75,35 @@ const AddEventSidebar = props => {
 
   // ** States
   const [values, setValues] = useState(defaultState)
+  const [users, setUsers] = useState([]); // Store all users
+  const [selectedGuests, setSelectedGuests] = useState([]); // Store selected guests
 
+  // Fetch users from the backend
+  const fetchUsers = async () => {
+    try {
+      const response = await fetch('http://localhost:5001/users', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${user.token}`, // Ensure the token is passed
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch users');
+      }
+
+      const data = await response.json();
+      setUsers(data);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+    }
+  };
+
+  // Fetch users when the component mounts
+  useEffect(() => {
+    fetchUsers();
+  }, []);
 
   const getJallonTTMOptions = () => {
     switch (values.optionTTM) {
@@ -151,24 +179,24 @@ const AddEventSidebar = props => {
       description: values.description,
       title: data.title,
       dateSouhaite: values.startDate,
-      direction: user.direction? user.direction: "DG",
-      kpi: values.kpi && values.kpi.length? values.kpi: "string",
-      modeGouvernance: values.session.length? values.session: "normal",
-      guests: "",
-      sharepoint: values.url.length? values.url: "url",
-      modeTraitement: values.mode.length? values.mode: "normal",
-      natureProjet:values.natureProjet && values.natureProjet.length? values.natureProjet: "Nature du projet",
+      direction: user.direction ? user.direction : "DG",
+      kpi: values.kpi && values.kpi.length ? values.kpi : "string",
+      modeGouvernance: values.session.length ? values.session : "normal",
+      guests: selectedGuests,
+      sharepoint: values.url.length ? values.url : "url",
+      modeTraitement: values.mode.length ? values.mode : "normal",
+      natureProjet: values.natureProjet && values.natureProjet.length ? values.natureProjet : "Nature du projet",
       code: "coo--oo--" + Math.floor(Math.random() * 1000),
-      optionTTM: values.optionTTM && values.optionTTM.length? values.optionTTM: "Option",
-      jalonTTM: values.jallonTTM && values.jallonTTM.length? values.jallonTTM: "To",
-      prioriteStrategique: values.priority && values.priority.length? values.priority: "priority",
-      objectifStrategique: values.objectif && values.objectif.length? values.objectif: "objectif",
-       createdById: user.id? user.id:1 // Add the user ID as the creator
+      optionTTM: values.optionTTM && values.optionTTM.length ? values.optionTTM : "Option",
+      jalonTTM: values.jallonTTM && values.jallonTTM.length ? values.jallonTTM : "To",
+      prioriteStrategique: values.priority && values.priority.length ? values.priority : "priority",
+      objectifStrategique: values.objectif && values.objectif.length ? values.objectif : "objectif",
+      createdById: user.id ? user.id : 1, // Add the user ID as the creator
     }
 
 
     if (store.selectedEvent === null || (store.selectedEvent !== null && !store.selectedEvent.title.length)) {
-
+      console.log(modifiedEvent_)
       if (!user || user.role !== 'CHEF_DE_PROJET') {
         console.log(!user || !user.role !== 'CHEF_DE_PROJET')
         toast.error('You do not have the required role to create or update events.')
@@ -212,7 +240,8 @@ const AddEventSidebar = props => {
   const resetToStoredValues = useCallback(() => {
     if (store.selectedEvent !== null) {
       const event = store.selectedEvent
-      setValue('title', event.title || '')
+      const guestIds = event.extendedProps.guests?.map((guest) => guest.id) || [];
+      setSelectedGuests(guestIds || []);
       setValues({
         url: event.url || '',
         title: event.title || '',
@@ -338,187 +367,390 @@ const AddEventSidebar = props => {
       <Box className='sidebar-body' sx={{ p: theme => theme.spacing(5, 6) }}>
         <DatePickerWrapper>
           <form onSubmit={handleSubmit(onSubmit)} autoComplete='off'>
-            <Divider
-              sx={{
-                '& .MuiDivider-wrapper': { px: 4 },
-                mt: theme => `${theme.spacing(5)} !important`,
-                mb: theme => `${theme.spacing(7.5)} !important`
-              }}
-            >
-              Instance gouvernance
-            </Divider>
-            <FormControl fullWidth sx={{ mb: 6 }}>
-              <InputLabel id='event-calendar'>Instance</InputLabel>
-              <Select
-                label='Calendar'
-                value={values.calendar}
-                labelId='event-calendar'
-                onChange={e => setValues({ ...values, calendar: e.target.value })}
-              >
-                <MenuItem value='COMOP'>COMOP</MenuItem>
-                <MenuItem value='CI'>CI</MenuItem>
-              </Select>
-            </FormControl>
-
-            <FormControl fullWidth sx={{ mb: 6 }}>
-              <RadioGroup
-                row
-                value={values.session}
-                name='simple-radio'
-                onChange={e => setValues({ ...values, session: e.target.value })}
-                aria-label='simple-radio'
-              >
-                <FormControlLabel value='normal' control={<Radio />} label='Session normal' />
-                <FormControlLabel value='adhoc' control={<Radio />} label='Session adhoc' />
-              </RadioGroup>
-            </FormControl>
-            <FormControl fullWidth sx={{ mb: 6 }}>
-              <RadioGroup
-                row
-                value={values.mode}
-                name='simple-radio'
-                onChange={e => setValues({ ...values, mode: e.target.value })}
-                aria-label='simple-radio'
-              >
-                <FormControlLabel value='normal' control={<Radio />} label='Mode normal' />
-                <FormControlLabel value='restreint' control={<Radio />} label='Mode restreint' />
-              </RadioGroup>
-            </FormControl>
-
-            {values.calendar === 'COMOP' && (
+            {user.role === 'CHEF_DE_PROJET' ? (
               <>
+                <Divider
+                  sx={{
+                    '& .MuiDivider-wrapper': { px: 4 },
+                    mt: theme => `${theme.spacing(5)} !important`,
+                    mb: theme => `${theme.spacing(7.5)} !important`
+                  }}
+                >
+                  Instance gouvernance
+                </Divider>
                 <FormControl fullWidth sx={{ mb: 6 }}>
-                  <InputLabel id='event-guests'>Option TTM</InputLabel>
+                  <InputLabel id='event-calendar'>Instance</InputLabel>
                   <Select
-                    label='Guests'
-                    value={values.optionTTM}
-                    labelId='event-guests'
-                    id='event-guests-select'
-                    onChange={e => setValues({ ...values, optionTTM: e.target.value })}
+                    label='Calendar'
+                    value={values.calendar}
+                    labelId='event-calendar'
+                    onChange={e => setValues({ ...values, calendar: e.target.value })}
                   >
-                    <MenuItem value='FullTrack'>Full track</MenuItem>
-                    <MenuItem value='FastTrack'>Fast track</MenuItem>
-                    <MenuItem value='SuperFastTrack'>Super fast track</MenuItem>
+                    <MenuItem value='COMOP'>COMOP</MenuItem>
+                    <MenuItem value='CI'>CI</MenuItem>
                   </Select>
                 </FormControl>
+                {values.calendar === 'COMOP' && (
+                  <>
+                    <FormControl fullWidth sx={{ mb: 6 }}>
+                      <InputLabel id='event-guests'>Option TTM</InputLabel>
+                      <Select
+                        label='Guests'
+                        value={values.optionTTM}
+                        labelId='event-guests'
+                        id='event-guests-select'
+                        onChange={e => setValues({ ...values, optionTTM: e.target.value })}
+                      >
+                        <MenuItem value='FullTrack'>Full track</MenuItem>
+                        <MenuItem value='FastTrack'>Fast track</MenuItem>
+                        <MenuItem value='SuperFastTrack'>Super fast track</MenuItem>
+                      </Select>
+                    </FormControl>
+                    <FormControl fullWidth sx={{ mb: 6 }}>
+                      <InputLabel id='event-guests'>Jallon TTM</InputLabel>
+                      <Select
+                        label='Guests'
+                        value={values.jallonTTM}
+                        labelId='event-guests'
+                        id='event-guests-select'
+                        onChange={e => setValues({ ...values, jallonTTM: e.target.value })}
+                      >
+                        {getJallonTTMOptions().map(option => (
+                          <MenuItem key={option} value={option}>
+                            {option}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                    <FormControl fullWidth sx={{ mb: 6 }}>
+                      <InputLabel id="nature-projet-label">Nature du projet</InputLabel>
+                      <Select
+                        labelId="nature-projet-label"
+                        value={values.natureProjet}
+                        onChange={(e) => setValues({ ...values, natureProjet: e.target.value })}
+                      >
+                        <MenuItem value="Outils">Outils</MenuItem>
+                        <MenuItem value="Offres">Offres</MenuItem>
+                        <MenuItem value="Infrastructure">Infrastructure</MenuItem>
+                        <MenuItem value="Autres">Autres</MenuItem>
+                      </Select>
+                    </FormControl>
+                    <FormControl fullWidth sx={{ mb: 6 }}>
+                      <InputLabel id="direction-select-label">Direction</InputLabel>
+                      <Select
+                        labelId="direction-select-label"
+                        value={values.direction}
+                        onChange={(e) => setValues({ ...values, direction: e.target.value })}
+                      >
+                        <MenuItem value="OMCM">OMCM - Orange Money Cameroun</MenuItem>
+                        <MenuItem value="DG">DG - Direction Generale</MenuItem>
+                        <MenuItem value="DOB">DOB - Direction Orange Business</MenuItem>
+                        <MenuItem value="DAF">DAF - Direction Administrative et financière</MenuItem>
+                      </Select>
+                    </FormControl>
+                  </>
+                )}
+                <Divider
+                  sx={{
+                    '& .MuiDivider-wrapper': { px: 4 },
+                    mt: theme => `${theme.spacing(5)} !important`,
+                    mb: theme => `${theme.spacing(7.5)} !important`
+                  }}
+                >
+                  Nouveau projet
+                </Divider>
                 <FormControl fullWidth sx={{ mb: 6 }}>
-                  <InputLabel id='event-guests'>Jallon TTM</InputLabel>
+                  <Controller
+                    name='title'
+                    control={control}
+                    rules={{ required: true }}
+                    render={({ field: { value, onChange } }) => (
+                      <TextField label='Title' value={value} onChange={onChange} error={Boolean(errors.title)} />
+                    )}
+                  />
+                  {errors.title && (
+                    <FormHelperText sx={{ color: 'error.main' }} id='event-title-error'>
+                      This field is required
+                    </FormHelperText>
+                  )}
+                </FormControl>
+                <Box sx={{ mb: 6 }}>
+                  <DatePicker
+                    selectsStart
+                    id='event-start-date'
+                    endDate={values.endDate}
+                    selected={values.startDate}
+                    startDate={values.startDate}
+                    showTimeSelect={!values.allDay}
+                    dateFormat={!values.allDay ? 'yyyy-MM-dd hh:mm' : 'yyyy-MM-dd'}
+                    customInput={<PickersComponent label='Start Date' registername='startDate' />}
+                    style={getDateFieldStyle()}
+                    onChange={handleDateChange}
+                    onSelect={handleStartDate}
+                  />
+                </Box>
+                <Box sx={{ mb: 6 }}>
+                  <DatePicker
+                    selectsEnd
+                    id='event-end-date'
+                    style={getDateFieldStyle()}
+                    endDate={values.endDate}
+                    selected={values.endDate}
+                    minDate={values.startDate}
+                    startDate={values.startDate}
+                    showTimeSelect={!values.allDay}
+                    dateFormat={!values.allDay ? 'yyyy-MM-dd hh:mm' : 'yyyy-MM-dd'}
+                    customInput={<PickersComponent label='End Date' registername='endDate' />}
+                    onChange={handleDateChange}
+                  />
+                </Box>
+                <FormControl sx={{ mb: 6 }}>
+                  <FormControlLabel
+                    label='All Day'
+                    control={
+                      <Switch checked={values.allDay} onChange={e => setValues({ ...values, allDay: e.target.checked })} />
+                    }
+                  />
+                </FormControl>
+                <FormControl fullWidth sx={{ mb: 6 }}>
+                  <InputLabel id="guest-select-label">Guests</InputLabel>
                   <Select
-                    label='Guests'
-                    value={values.jallonTTM}
-                    labelId='event-guests'
-                    id='event-guests-select'
-                    onChange={e => setValues({ ...values, jallonTTM: e.target.value })}
+                    labelId="guest-select-label"
+                    multiple
+                    value={selectedGuests}
+                    onChange={(e) => setSelectedGuests(e.target.value)}
+                    renderValue={(selected) =>
+                      selected.map((guestId) => {
+                        const user = users.find((u) => u.id === guestId);
+                        return user ? user.username : '';
+                      }).join(', ')
+                    }
                   >
-                    {getJallonTTMOptions().map(option => (
-                      <MenuItem key={option} value={option}>
-                        {option}
-                      </MenuItem>
-                    ))}
+                    {users
+                      .filter((u) => u.id !== user.id) // Exclude the current user
+                      .map((user) => (
+                        <MenuItem key={user.id} value={user.id}>
+                          {user.username}
+                        </MenuItem>
+                      ))}
                   </Select>
                 </FormControl>
                 <TextField
                   rows={4}
+                  multiline
                   fullWidth
                   sx={{ mb: 6 }}
-                  label='Nature du projet'
+                  label='Description'
                   id='event-description'
-                  value={values.natureProjet}
-                  onChange={e => setValues({ ...values, natureProjet: e.target.value })}
+                  value={values.description}
+                  onChange={e => setValues({ ...values, description: e.target.value })}
                 />
               </>
-            )}
-            <Divider
-              sx={{
-                '& .MuiDivider-wrapper': { px: 4 },
-                mt: theme => `${theme.spacing(5)} !important`,
-                mb: theme => `${theme.spacing(7.5)} !important`
-              }}
-            >
-              Nouveau projet
-            </Divider>
-            <FormControl fullWidth sx={{ mb: 6 }}>
-              <Controller
-                name='title'
-                control={control}
-                rules={{ required: true }}
-                render={({ field: { value, onChange } }) => (
-                  <TextField label='Title' value={value} onChange={onChange} error={Boolean(errors.title)} />
-                )}
-              />
-              {errors.title && (
-                <FormHelperText sx={{ color: 'error.main' }} id='event-title-error'>
-                  This field is required
-                </FormHelperText>
-              )}
-            </FormControl>
-            <Box sx={{ mb: 6 }}>
-              <DatePicker
-                selectsStart
-                id='event-start-date'
-                endDate={values.endDate}
-                selected={values.startDate}
-                startDate={values.startDate}
-                showTimeSelect={!values.allDay}
-                dateFormat={!values.allDay ? 'yyyy-MM-dd hh:mm' : 'yyyy-MM-dd'}
-                customInput={<PickersComponent label='Start Date' registername='startDate' />}
-                style={getDateFieldStyle()}
-                onChange={handleDateChange}
-                onSelect={handleStartDate}
-              />
-            </Box>
-            <Box sx={{ mb: 6 }}>
-              <DatePicker
-                selectsEnd
-                id='event-end-date'
-                style={getDateFieldStyle()}
-                endDate={values.endDate}
-                selected={values.endDate}
-                minDate={values.startDate}
-                startDate={values.startDate}
-                showTimeSelect={!values.allDay}
-                dateFormat={!values.allDay ? 'yyyy-MM-dd hh:mm' : 'yyyy-MM-dd'}
-                customInput={<PickersComponent label='End Date' registername='endDate' />}
-                onChange={handleDateChange}
-              />
-            </Box>
-            <FormControl sx={{ mb: 6 }}>
-              <FormControlLabel
-                label='All Day'
-                control={
-                  <Switch checked={values.allDay} onChange={e => setValues({ ...values, allDay: e.target.checked })} />
-                }
-              />
-            </FormControl>
-            <FormControl fullWidth sx={{ mb: 6 }}>
-              <InputLabel id='event-guests'>Guests</InputLabel>
-              <Select
-                multiple
-                label='Guests'
-                value={values.guests}
-                labelId='event-guests'
-                id='event-guests-select'
-                onChange={e => setValues({ ...values, guests: e.target.value })}
-              >
-                <MenuItem value='bruce'>Bruce</MenuItem>
-                <MenuItem value='clark'>Clark</MenuItem>
-                <MenuItem value='diana'>Diana</MenuItem>
-                <MenuItem value='john'>John</MenuItem>
-                <MenuItem value='barry'>Barry</MenuItem>
-              </Select>
-            </FormControl>
-            <TextField
-              rows={4}
-              multiline
-              fullWidth
-              sx={{ mb: 6 }}
-              label='Description'
-              id='event-description'
-              value={values.description}
-              onChange={e => setValues({ ...values, description: e.target.value })}
-            />
+            ) : (
+              <>
+                <Divider
+                  sx={{
+                    '& .MuiDivider-wrapper': { px: 4 },
+                    mt: theme => `${theme.spacing(5)} !important`,
+                    mb: theme => `${theme.spacing(7.5)} !important`
+                  }}
+                >
+                  Instance gouvernance
+                </Divider>
+                <FormControl fullWidth sx={{ mb: 6 }}>
+                  <InputLabel id='event-calendar'>Instance</InputLabel>
+                  <Select
+                    label='Calendar'
+                    value={values.calendar}
+                    labelId='event-calendar'
+                    onChange={e => setValues({ ...values, calendar: e.target.value })}
+                  >
+                    <MenuItem value='COMOP'>COMOP</MenuItem>
+                    <MenuItem value='CI'>CI</MenuItem>
+                  </Select>
+                </FormControl>
+                <FormControl fullWidth sx={{ mb: 6 }}>
+                  <RadioGroup
+                    row
+                    value={values.session}
+                    name='simple-radio'
+                    onChange={e => setValues({ ...values, session: e.target.value })}
+                    aria-label='simple-radio'
+                  >
+                    <FormControlLabel value='normal' control={<Radio />} label='Session normal' />
+                    <FormControlLabel value='adhoc' control={<Radio />} label='Session adhoc' />
+                  </RadioGroup>
+                </FormControl>
+                <FormControl fullWidth sx={{ mb: 6 }}>
+                  <RadioGroup
+                    row
+                    value={values.mode}
+                    name='simple-radio'
+                    onChange={e => setValues({ ...values, mode: e.target.value })}
+                    aria-label='simple-radio'
+                  >
+                    <FormControlLabel value='normal' control={<Radio />} label='Mode normal' />
+                    <FormControlLabel value='restreint' control={<Radio />} label='Mode restreint' />
+                  </RadioGroup>
+                </FormControl>
 
-            <Divider
+                {values.calendar === 'COMOP' && (
+                  <>
+                    <FormControl fullWidth sx={{ mb: 6 }}>
+                      <InputLabel id='event-guests'>Option TTM</InputLabel>
+                      <Select
+                        label='Guests'
+                        value={values.optionTTM}
+                        labelId='event-guests'
+                        id='event-guests-select'
+                        onChange={e => setValues({ ...values, optionTTM: e.target.value })}
+                      >
+                        <MenuItem value='FullTrack'>Full track</MenuItem>
+                        <MenuItem value='FastTrack'>Fast track</MenuItem>
+                        <MenuItem value='SuperFastTrack'>Super fast track</MenuItem>
+                      </Select>
+                    </FormControl>
+                    <FormControl fullWidth sx={{ mb: 6 }}>
+                      <InputLabel id='event-guests'>Jallon TTM</InputLabel>
+                      <Select
+                        label='Guests'
+                        value={values.jallonTTM}
+                        labelId='event-guests'
+                        id='event-guests-select'
+                        onChange={e => setValues({ ...values, jallonTTM: e.target.value })}
+                      >
+                        {getJallonTTMOptions().map(option => (
+                          <MenuItem key={option} value={option}>
+                            {option}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                    <FormControl fullWidth sx={{ mb: 6 }}>
+                      <InputLabel id="nature-projet-label">Nature du projet</InputLabel>
+                      <Select
+                        labelId="nature-projet-label"
+                        value={values.natureProjet}
+                        onChange={(e) => setValues({ ...values, natureProjet: e.target.value })}
+                      >
+                        <MenuItem value="Outils">Outils</MenuItem>
+                        <MenuItem value="Offres">Offres</MenuItem>
+                        <MenuItem value="Infrastructure">Infrastructure</MenuItem>
+                        <MenuItem value="Autres">Autres</MenuItem>
+                      </Select>
+                    </FormControl>
+                    <FormControl fullWidth sx={{ mb: 6 }}>
+                      <InputLabel id="direction-select-label">Direction</InputLabel>
+                      <Select
+                        labelId="direction-select-label"
+                        value={values.direction}
+                        onChange={(e) => setValues({ ...values, direction: e.target.value })}
+                      >
+                        <MenuItem value="OMCM">OMCM - Orange Money Cameroun</MenuItem>
+                        <MenuItem value="DG">DG - Direction Generale</MenuItem>
+                        <MenuItem value="DOB">DOB - Direction Orange Business</MenuItem>
+                        <MenuItem value="DAF">DAF - Direction Administrative et financière</MenuItem>
+                      </Select>
+                    </FormControl>
+                  </>
+                )}
+                <Divider
+                  sx={{
+                    '& .MuiDivider-wrapper': { px: 4 },
+                    mt: theme => `${theme.spacing(5)} !important`,
+                    mb: theme => `${theme.spacing(7.5)} !important`
+                  }}
+                >
+                  Nouveau projet
+                </Divider>
+                <FormControl fullWidth sx={{ mb: 6 }}>
+                  <Controller
+                    name='title'
+                    control={control}
+                    rules={{ required: true }}
+                    render={({ field: { value, onChange } }) => (
+                      <TextField label='Title' value={value} onChange={onChange} error={Boolean(errors.title)} />
+                    )}
+                  />
+                  {errors.title && (
+                    <FormHelperText sx={{ color: 'error.main' }} id='event-title-error'>
+                      This field is required
+                    </FormHelperText>
+                  )}
+                </FormControl>
+                <Box sx={{ mb: 6 }}>
+                  <DatePicker
+                    selectsStart
+                    id='event-start-date'
+                    endDate={values.endDate}
+                    selected={values.startDate}
+                    startDate={values.startDate}
+                    showTimeSelect={!values.allDay}
+                    dateFormat={!values.allDay ? 'yyyy-MM-dd hh:mm' : 'yyyy-MM-dd'}
+                    customInput={<PickersComponent label='Start Date' registername='startDate' />}
+                    style={getDateFieldStyle()}
+                    onChange={handleDateChange}
+                    onSelect={handleStartDate}
+                  />
+                </Box>
+                <Box sx={{ mb: 6 }}>
+                  <DatePicker
+                    selectsEnd
+                    id='event-end-date'
+                    style={getDateFieldStyle()}
+                    endDate={values.endDate}
+                    selected={values.endDate}
+                    minDate={values.startDate}
+                    startDate={values.startDate}
+                    showTimeSelect={!values.allDay}
+                    dateFormat={!values.allDay ? 'yyyy-MM-dd hh:mm' : 'yyyy-MM-dd'}
+                    customInput={<PickersComponent label='End Date' registername='endDate' />}
+                    onChange={handleDateChange}
+                  />
+                </Box>
+                <FormControl sx={{ mb: 6 }}>
+                  <FormControlLabel
+                    label='All Day'
+                    control={
+                      <Switch checked={values.allDay} onChange={e => setValues({ ...values, allDay: e.target.checked })} />
+                    }
+                  />
+                </FormControl>
+                <FormControl fullWidth sx={{ mb: 6 }}>
+                  <InputLabel id="guest-select-label">Guests</InputLabel>
+                  <Select
+                    labelId="guest-select-label"
+                    multiple
+                    value={selectedGuests}
+                    onChange={(e) => setSelectedGuests(e.target.value)}
+                    renderValue={(selected) =>
+                      selected.map((guestId) => {
+                        const user = users.find((u) => u.id === guestId);
+                        return user ? user.username : '';
+                      }).join(', ')
+                    }
+                  >
+                    {users
+                      .filter((u) => u.id !== user.id) // Exclude the current user
+                      .map((user) => (
+                        <MenuItem key={user.id} value={user.id}>
+                          {user.username}
+                        </MenuItem>
+                      ))}
+                  </Select>
+                </FormControl>
+                <TextField
+                  rows={4}
+                  multiline
+                  fullWidth
+                  sx={{ mb: 6 }}
+                  label='Description'
+                  id='event-description'
+                  value={values.description}
+                  onChange={e => setValues({ ...values, description: e.target.value })}
+                />
+
+                <Divider
               sx={{
                 '& .MuiDivider-wrapper': { px: 4 },
                 mt: theme => `${theme.spacing(5)} !important`,
@@ -581,6 +813,9 @@ const AddEventSidebar = props => {
               value={values.url}
               onChange={e => setValues({ ...values, url: e.target.value })}
             />
+              </>
+            )}
+            
             {values.url !== '' && (
               <a
                 href={values.url}

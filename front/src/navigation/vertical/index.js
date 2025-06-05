@@ -22,6 +22,21 @@ const navigation = () => {
       path: '/apps/calendar'
     },
     {
+      title: 'Session',
+      icon: 'mdi:shield-outline',
+      path: '/session'
+    },
+    {
+      title: 'Planification',
+      icon: 'mdi:apps',
+      path: '/planification'
+    },
+    {
+      title: 'Decision',
+      icon: 'mdi:palette-swatch-outline',
+      path: '/decision'
+    },
+    {
       title: 'Projects',
       icon: 'mdi:clipboard-outline',
       badgeContent: 'new',
@@ -30,15 +45,8 @@ const navigation = () => {
         {
           title: 'List',
           path: '/projet'
-        },
-        {
-          title: 'Projets valide',
-          path: '/projet/valide'
-        },
-        {
-          title: 'Projets non valide',
-          path: '/projet/non-valide'
         }
+        
         ,/*
         {
           title: 'Settings',

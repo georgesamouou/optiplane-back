@@ -1,3 +1,5 @@
+import React, { useEffect, useState } from 'react'
+
 // ** MUI Imports
 import Box from '@mui/material/Box'
 import Card from '@mui/material/Card'
@@ -5,7 +7,8 @@ import { useTheme } from '@mui/material/styles'
 import CardHeader from '@mui/material/CardHeader'
 import Typography from '@mui/material/Typography'
 import CardContent from '@mui/material/CardContent'
-
+import authConfig from 'src/configs/auth';
+import API_URL from 'src/configs/api';
 // ** Icon Imports
 import Icon from 'src/@core/components/icon'
 
@@ -13,21 +16,42 @@ import Icon from 'src/@core/components/icon'
 import CustomChip from 'src/@core/components/mui/chip'
 import ReactApexcharts from 'src/@core/components/react-apexcharts'
 
-const series = [
-  {
-    data: [280, 200, 220, 180, 270, 250, 70, 90, 200, 150, 160, 100, 150, 100, 50]
-  }
-]
-
 const ApexLineChart = () => {
+  const token = window.localStorage.getItem(authConfig.storageTokenKeyName);
+  const [series, setSeries] = useState([
+    {
+      data: [],
+    },
+  ])
+  const [totalProjects, setTotalProjects] = useState(0);
   // ** Hook
   const theme = useTheme()
+
+  useEffect(() => {
+    const fetchProjectsByJalon = async () => {
+      try {
+        const response = await fetch(`${API_URL}/projects-by-jalon`, {
+          headers: {
+            Authorization: token,//ajust based on your auth setup
+          },
+        })
+        const data = await response.json()
+        setSeries([{ data }]) // Update the series with the fetched data
+        const total = data.reduce((sum, count) => sum + count, 0);
+        setTotalProjects(total);
+      } catch (error) {
+        console.error('Failed to fetch projects by jalonTTM:', error)
+      }
+    }
+
+    fetchProjectsByJalon()
+  }, [])
 
   const options = {
     chart: {
       parentHeightOffset: 0,
       zoom: { enabled: false },
-      toolbar: { show: false }
+      toolbar: { show: false },
     },
     colors: ['#ff9f43'],
     stroke: { curve: 'straight' },
@@ -36,83 +60,57 @@ const ApexLineChart = () => {
       strokeWidth: 7,
       strokeOpacity: 1,
       colors: ['#ff9f43'],
-      strokeColors: ['#fff']
+      strokeColors: ['#fff'],
     },
     grid: {
       padding: { top: -10 },
       borderColor: theme.palette.divider,
       xaxis: {
-        lines: { show: true }
-      }
+        lines: { show: true },
+      },
     },
     tooltip: {
       custom(data) {
         return `<div class='bar-chart'>
           <span>${data.series[data.seriesIndex][data.dataPointIndex]}%</span>
         </div>`
-      }
+      },
     },
     yaxis: {
       labels: {
-        style: { colors: theme.palette.text.disabled }
-      }
+        style: { colors: theme.palette.text.disabled },
+      },
     },
     xaxis: {
       axisBorder: { show: false },
       axisTicks: { color: theme.palette.divider },
       crosshairs: {
-        stroke: { color: theme.palette.divider }
+        stroke: { color: theme.palette.divider },
       },
       labels: {
-        style: { colors: theme.palette.text.disabled }
+        style: { colors: theme.palette.text.disabled },
       },
-      categories: [
-        '7/12',
-        '8/12',
-        '9/12',
-        '10/12',
-        '11/12',
-        '12/12',
-        '13/12',
-        '14/12',
-        '15/12',
-        '16/12',
-        '17/12',
-        '18/12',
-        '19/12',
-        '20/12',
-        '21/12'
-      ]
-    }
+      categories: ['T-1', 'T0', 'T1', 'T2', 'T3', 'T4'], // Jalon categories
+    },
   }
 
   return (
     <Card>
       <CardHeader
-        title='Total'
+        title='Projets par jalon'
         subheader='Project validation curve'
         sx={{
           flexDirection: ['column', 'row'],
           alignItems: ['flex-start', 'center'],
           '& .MuiCardHeader-action': { mb: 0 },
-          '& .MuiCardHeader-content': { mb: [2, 0] }
+          '& .MuiCardHeader-content': { mb: [2, 0] },
         }}
         action={
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <Typography variant='h6' sx={{ mr: 5 }}>
-              221,267
+              {totalProjects} Projets
             </Typography>
-            <CustomChip
-              skin='light'
-              color='success'
-              sx={{ fontWeight: 500, borderRadius: 1, fontSize: '0.875rem' }}
-              label={
-                <Box sx={{ display: 'flex', alignItems: 'center', '& svg': { mr: 1 } }}>
-                  <Icon icon='mdi:arrow-up' fontSize='1rem' />
-                  <span>22%</span>
-                </Box>
-              }
-            />
+            
           </Box>
         }
       />

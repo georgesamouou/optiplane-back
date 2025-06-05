@@ -40,9 +40,9 @@ export const addEvent = createAsyncThunk('appCalendar/addEvent', async (event, {
     throw new Error('Authorization token is missing');
   }
 
-  console.log("response-------",event);
+  console.log("response-------Add_____",event);
 
-  const response = await fetch(`https://optiplane-back-1.onrender.com/project`, {
+  const response = await fetch(`http://localhost:5001/project`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
